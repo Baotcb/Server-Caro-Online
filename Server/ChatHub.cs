@@ -31,7 +31,7 @@ namespace Server
                     await Clients.Client(Context.ConnectionId).SendAsync("UserJoin", Context.ConnectionId);
                     listroom.Add(player);
                     await Clients.Group(listroom[0].Room).SendAsync("CompetitorJoin", Context.ConnectionId);
-                    await Clients.Client(Context.ConnectionId).SendAsync("Notice", listroom.Count == 1 ? "You are X" : "You are O");
+                    await Clients.Client(Context.ConnectionId).SendAsync("Notice", listroom.Count == 1 ? "X" : "O");
                     await LoadRoom();
                 }
                 else
@@ -104,13 +104,14 @@ namespace Server
             }
             participants.Remove(item);
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, item.Room);
-           
             await Clients.Groups(item.Room).SendAsync("LeaveGame", Context.ConnectionId);
             if (item.TypeRoom != true)
             {
-                matchmakingRooms.Remove(item.Room);
-                await Clients.Groups(item.Room).SendAsync("AutoDisConnect");
-                
+                if (participants.Where(p => p.Room == item.Room).Count() == 1)
+                {
+                    matchmakingRooms.Remove(item.Room);
+                    await Clients.Groups(item.Room).SendAsync("AutoDisConnect");
+                }
             }
             else
             {
